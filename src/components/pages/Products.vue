@@ -294,7 +294,8 @@ export default {
       });
     },
     openDelModal(item) {
-      this.tempProduct = Object.assign({}, item);
+      // this.tempProduct = Object.assign({}, item);
+      this.tempProduct = item;
       $("#delProductModal").modal("show");
     },
     deleteProduct() {
