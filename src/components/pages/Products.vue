@@ -1,18 +1,13 @@
 <template>
   <div>
     <div class="text-right mt-4">
-      <!-- Modal：https://getbootstrap.com/docs/4.4/components/modal/#live-demo -->
-
       <!-- Button trigger modal -->
-      <!-- 原先：data-toggle="modal" data-target="#productModal" -->
-      <!-- 改為：透過 method 打開 Modal (元件頁面要記得 import jQuery) -->
       <button class="btn btn-primary" @click="openModal(true)">建立新產品</button>
     </div>
     <table class="table mt-4">
       <thead>
-        <!-- 可以只調整 "要限制寬度" 的 th，剩下的 th 會自動調整 -->
+        <!-- 限制寬度 -->
         <th width="100">分類</th>
-        <!-- 以這邊來說，產品名稱最需要空間，所以其他部分都限制寬度，把最多的剩餘空間通通給產品名稱 -->
         <th>產品名稱</th>
         <th width="120">原價</th>
         <th width="120">售價</th>
@@ -27,7 +22,7 @@
           <td class="text-right">{{ item.origin_price }}</td>
           <td class="text-right">{{ item.price }}</td>
           <td>
-            <!-- 產品如果為啟用：is_enabled == 1 -->
+            <!-- 產品如果為啟用 is_enabled == 1 -->
             <span v-if="item.is_enabled" class="text-success">啟用</span>
             <span v-else class="text-danger">未啟用</span>
           </td>
@@ -77,14 +72,16 @@
                     或 上傳圖片
                     <i class="fas fa-spinner fa-spin"></i>
                   </label>
-                  <input type="file" id="customFile" class="form-control" ref="files" />
+                  <!-- @change -->
+                  <input
+                    type="file"
+                    id="customFile"
+                    class="form-control"
+                    ref="files"
+                    @change="uploadFile"
+                  />
                 </div>
-                <img
-                  img="https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=828346ed697837ce808cae68d3ddc3cf&auto=format&fit=crop&w=1350&q=80"
-                  class="img-fluid"
-                  :src="tempProduct.imageUrl"
-                  alt
-                />
+                <img class="img-fluid" :src="tempProduct.imageUrl" alt />
               </div>
               <div class="col-sm-8">
                 <div class="form-group">
@@ -222,71 +219,54 @@
 </template>
 
 <script>
-import $ from "jquery"; // 元件頁面要記得 import jQuery
+import $ from "jquery";
 
 export default {
   data() {
     return {
       products: [],
-      tempProduct: {}, // 綁定所有的欄位後，用 POST 將 tempProduct 裡的資料新增到資料庫
+      tempProduct: {},
       isNew: false
     };
   },
   methods: {
     getProducts() {
       const vm = this;
-      // 取得產品資料
-      const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products`; // 加上 admin 才是管理者使用的
+      const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products`;
       console.log(process.env.APIPATH, process.env.CUSTOMPATH);
       this.$http.get(api).then(response => {
         console.log(response.data);
-        // 存回 vm ...
         vm.products = response.data.products;
         console.log(vm.products);
       });
     },
     openModal(isNew, item) {
-      // 按下按鈕後，等 AJAX 完成才開啟 Modal
-      // https://getbootstrap.com/docs/4.4/components/modal/#modalshow
-      // $("#productModal").modal("show");
-
-      // 新舊判斷
       if (isNew) {
-        // 如果是新增
-        this.tempProduct = {}; // tempProduct = 空物件
-        this.isNew = true; // 新的
+        this.tempProduct = {};
+        this.isNew = true;
       } else {
-        // this.tempProduct = item; // 物件傳參考特性
-        this.tempProduct = Object.assign({}, item); // (ES6) 將 item 的值寫到一個空物件 (而且可以避免傳參考的特性之問題)
+        this.tempProduct = Object.assign({}, item); // ES6
         this.isNew = false;
       }
-      $("#productModal").modal("show"); // 延後到這裡才打開 Modal
+      $("#productModal").modal("show");
     },
     updateProduct() {
-      // 商品建立
       let api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/product`;
       const vm = this;
 
       let httpMethod = "post";
       if (!vm.isNew) {
-        // 如果不是新的，是"修改"，就改 api
-        api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/product/${vm.tempProduct.id}`; // :id => ${vm.tempProduct.id}
-        // HTTP 行為也要改為 put
+        api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/product/${vm.tempProduct.id}`;
         httpMethod = "put";
       }
 
       console.log(process.env.APIPATH, process.env.CUSTOMPATH);
-      // 符合格式 data : {...}
       this.$http[httpMethod](api, { data: vm.tempProduct }).then(response => {
         console.log(response.data);
         if (response.data.success) {
-          // 如果新增成功，就把 Modal 關閉
-          // .modal('hide')：https://getbootstrap.com/docs/4.4/components/modal/#modalhide
           $("#productModal").modal("hide");
-          // 並且再重新取得一次遠端的資料 (更新畫面)
           vm.getProducts();
         } else {
-          // 如果新增失敗，做一樣的動作，但是再補上 console.log
           $("#productModal").modal("hide");
           vm.getProducts();
           console.log("新增失敗");
@@ -294,7 +274,6 @@ export default {
       });
     },
     openDelModal(item) {
-      // this.tempProduct = Object.assign({}, item);
       this.tempProduct = item;
       $("#delProductModal").modal("show");
     },
@@ -305,21 +284,48 @@ export default {
       this.$http.delete(api).then(response => {
         console.log(response.data);
         if (response.data.success) {
-          // 如果刪除成功，就把 Modal 關閉，並更新遠端資料與畫面
           $("#delProductModal").modal("hide");
           vm.getProducts();
         } else {
-          // 如果刪除失敗，一樣關閉 Modal 與更新畫面，但是再補上 console.log
           $("#delProductModal").modal("hide");
           vm.getProducts();
           console.log("刪除失敗");
         }
       });
+    },
+    uploadFile() {
+      // 1. 取出檔案
+      console.log(this);
+      const uploadFile = this.$refs.files.files[0]; // 取得圖檔
+      // 2. 建立 FormData 物件
+      const formData = new FormData(); // FormData() 物件
+      formData.append("file-to-upload", uploadFile); // 新增 key/value 欄位
+      // 3. 送出
+      const vm = this;
+      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/upload`; // 定義路徑
+      this.$http.post(url, formData, {
+          // 將格式改成 formData 的格式
+          headers: {
+            "content-Type": "multipart/form-data"
+          }
+        })
+        .then(response => {
+          console.log(response.data); // 可取得加上授權的圖片路徑
+          // 4. 對應到 tempProduct 的 imageUrl 裡面
+          if (response.data.success) {
+            // vm.tempProduct.imageUrl = response.data.imageUrl;
+            // console.log(vm.tempProduct);
+            // => 沒有雙向綁定 (這個屬性是一開始 data 沒有定義到的，所以必須使用 $set 來加入喔，可參考之前的筆記)
+            // https://sealman234.github.io/vuenote/20191208/2035519874/
+            // 雙向綁定
+            vm.$set(vm.tempProduct, "imageUrl", response.data.imageUrl);
+            // => 上面圖片網址自動帶上，下方也會帶入剛才上傳的圖片
+          }
+        });
     }
   },
   created() {
-    // 加上 created 的 hook 觸發 getProducts 事件 (init)
-    this.getProducts();
+    this.getProducts(); // init
   }
 };
 </script>
