@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- 當 isLoading 是 true 就會啟用 -->
     <loading :active.sync="isLoading"></loading>
     <div class="text-right mt-4">
       <!-- Button trigger modal -->
@@ -37,7 +36,12 @@
         </tr>
       </tbody>
     </table>
-    <!-- productModal -->
+    <!-- 分頁 -->
+    <!-- 1. v-bind:childPaginations 會把 childPaginations 這個參數的值傳過去給 pagination -->
+    <!-- 2. 新增 getProducts 的 Function 來接收子元件的資料。
+    當子元件觸發 changeCurrentPage 時，就會執行 getProducts 來接收傳送的值 -->
+    <Pagination v-bind:childPaginations="pagination" @changeCurrentPage="getProducts"></Pagination>
+    <!-- 新增/修改 Modal -->
     <div
       class="modal fade"
       id="productModal"
@@ -188,7 +192,7 @@
         </div>
       </div>
     </div>
-    <!-- delProductModal" -->
+    <!-- 刪除 Modal" -->
     <div
       class="modal fade"
       id="delProductModal"
@@ -223,6 +227,7 @@
 
 <script>
 import $ from "jquery";
+import Pagination from "../Pagination";
 
 export default {
   data() {
@@ -233,20 +238,22 @@ export default {
       isLoading: false,
       status: {
         fileUploading: false
-      }
+      },
+      pagination: {} // 要先預定義
     };
   },
   methods: {
-    getProducts() {
+    getProducts(page = 1) {
+      // ES6 參數預設值 : 假設沒帶這參數預設就是 1 (這樣就可以不用改以前的東西了)
       const vm = this;
-      const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products`;
+      const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products?page=${page}`;
       console.log(process.env.APIPATH, process.env.CUSTOMPATH);
-      vm.isLoading = true; // 讀取時轉圈
+      vm.isLoading = true;
       this.$http.get(api).then(response => {
         console.log(response.data);
+        vm.isLoading = false;
         vm.products = response.data.products;
-        console.log(vm.products);
-        vm.isLoading = false; // 讀取完
+        vm.pagination = response.data.pagination; // 把分頁資訊存到 pagination 變數
       });
     },
     openModal(isNew, item) {
@@ -327,6 +334,9 @@ export default {
           }
         });
     }
+  },
+  components: {
+    Pagination
   },
   created() {
     this.getProducts(); // init
