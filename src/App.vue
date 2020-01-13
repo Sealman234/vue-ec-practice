@@ -10,7 +10,7 @@ import HelloWorld from "./components/HelloWorld";
 export default {
   name: "App",
   components: {
-    HelloWorld
+    HelloWorld,
   },
   // created() {
   //   const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/products`;

@@ -1,19 +1,16 @@
 import Vue from 'vue';
 import axios from 'axios';
 import VueAxios from 'vue-axios';
-
-
-// 要用到 Bootstrap 的 jQuery 功能時才需要載入，如果只是用到樣式就不需要
-// 因為 Vue Cli 已經設定好了，所以只需要輸入 import 'bootstrap' 直接載入就能運作了
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css';
 import 'bootstrap';
-// 因為 Bootstrap 必須仰賴 jQuery 與 popper 才能運行
-// npm install --save jquery popper.js
-
 
 import App from './App';
 import router from './router';
+import './bus'; // import
 
 Vue.use(VueAxios, axios);
+Vue.component('Loading', Loading);
 
 Vue.config.productionTip = false;
 

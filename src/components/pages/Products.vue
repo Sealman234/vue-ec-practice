@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- 當 isLoading 是 true 就會啟用 -->
+    <loading :active.sync="isLoading"></loading>
     <div class="text-right mt-4">
       <!-- Button trigger modal -->
       <button class="btn btn-primary" @click="openModal(true)">建立新產品</button>
@@ -70,7 +72,8 @@
                 <div class="form-group">
                   <label for="customFile">
                     或 上傳圖片
-                    <i class="fas fa-spinner fa-spin"></i>
+                    <!-- Animating Icons + v-if 顯示 -->
+                    <i class="fas fa-spinner fa-spin" v-if="status.fileUploading"></i>
                   </label>
                   <!-- @change -->
                   <input
@@ -226,7 +229,11 @@ export default {
     return {
       products: [],
       tempProduct: {},
-      isNew: false
+      isNew: false,
+      isLoading: false,
+      status: {
+        fileUploading: false
+      }
     };
   },
   methods: {
@@ -234,10 +241,12 @@ export default {
       const vm = this;
       const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products`;
       console.log(process.env.APIPATH, process.env.CUSTOMPATH);
+      vm.isLoading = true; // 讀取時轉圈
       this.$http.get(api).then(response => {
         console.log(response.data);
         vm.products = response.data.products;
         console.log(vm.products);
+        vm.isLoading = false; // 讀取完
       });
     },
     openModal(isNew, item) {
@@ -294,38 +303,34 @@ export default {
       });
     },
     uploadFile() {
-      // 1. 取出檔案
       console.log(this);
-      const uploadFile = this.$refs.files.files[0]; // 取得圖檔
-      // 2. 建立 FormData 物件
-      const formData = new FormData(); // FormData() 物件
-      formData.append("file-to-upload", uploadFile); // 新增 key/value 欄位
-      // 3. 送出
+      const uploadFile = this.$refs.files.files[0];
+      const formData = new FormData();
+      formData.append("file-to-upload", uploadFile);
       const vm = this;
-      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/upload`; // 定義路徑
-      this.$http.post(url, formData, {
-          // 將格式改成 formData 的格式
+      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/upload`;
+      vm.status.fileUploading = true;
+      this.$http
+        .post(url, formData, {
           headers: {
             "content-Type": "multipart/form-data"
           }
         })
         .then(response => {
-          console.log(response.data); // 可取得加上授權的圖片路徑
-          // 4. 對應到 tempProduct 的 imageUrl 裡面
+          console.log(response.data);
+          vm.status.fileUploading = false;
           if (response.data.success) {
-            // vm.tempProduct.imageUrl = response.data.imageUrl;
-            // console.log(vm.tempProduct);
-            // => 沒有雙向綁定 (這個屬性是一開始 data 沒有定義到的，所以必須使用 $set 來加入喔，可參考之前的筆記)
-            // https://sealman234.github.io/vuenote/20191208/2035519874/
-            // 雙向綁定
             vm.$set(vm.tempProduct, "imageUrl", response.data.imageUrl);
-            // => 上面圖片網址自動帶上，下方也會帶入剛才上傳的圖片
+          } else {
+            // 上傳檔案失敗的話，透過 Event Bus 提醒用戶錯誤在哪裡
+            this.$bus.$emit("message:push", response.data.message, "danger");
           }
         });
     }
   },
   created() {
     this.getProducts(); // init
+    // this.$bus.$emit('message:push', '這是一段訊息', 'success');
   }
 };
 </script>
