@@ -20,8 +20,8 @@
           <td>{{ item.category }}</td>
           <td>{{ item.title }}</td>
           <!-- 金額靠右 -->
-          <td class="text-right">{{ item.origin_price }}</td>
-          <td class="text-right">{{ item.price }}</td>
+          <td class="text-right">{{ item.origin_price | currency}}</td>
+          <td class="text-right">{{ item.price | currency}}</td>
           <td>
             <!-- 產品如果為啟用 is_enabled == 1 -->
             <span v-if="item.is_enabled" class="text-success">啟用</span>
@@ -37,9 +37,6 @@
       </tbody>
     </table>
     <!-- 分頁 -->
-    <!-- 1. v-bind:childPaginations 會把 childPaginations 這個參數的值傳過去給 pagination -->
-    <!-- 2. 新增 getProducts 的 Function 來接收子元件的資料。
-    當子元件觸發 changeCurrentPage 時，就會執行 getProducts 來接收傳送的值 -->
     <Pagination v-bind:childPaginations="pagination" @changeCurrentPage="getProducts"></Pagination>
     <!-- 新增/修改 Modal -->
     <div
@@ -244,7 +241,6 @@ export default {
   },
   methods: {
     getProducts(page = 1) {
-      // ES6 參數預設值 : 假設沒帶這參數預設就是 1 (這樣就可以不用改以前的東西了)
       const vm = this;
       const api = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/admin/products?page=${page}`;
       console.log(process.env.APIPATH, process.env.CUSTOMPATH);
@@ -253,7 +249,7 @@ export default {
         console.log(response.data);
         vm.isLoading = false;
         vm.products = response.data.products;
-        vm.pagination = response.data.pagination; // 把分頁資訊存到 pagination 變數
+        vm.pagination = response.data.pagination;
       });
     },
     openModal(isNew, item) {
