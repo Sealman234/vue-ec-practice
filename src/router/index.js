@@ -6,6 +6,7 @@ import Dashboard from '@/components/Dashboard';
 import Products from '@/components/pages/Products';
 import Coupons from '@/components/pages/Coupons';
 import Orders from '@/components/pages/Orders';
+import CustomerOrder from '@/components/pages/CustomerOrder';
 
 Vue.use(VueRouter);
 
@@ -15,14 +16,6 @@ export default new VueRouter({
       path: '*',
       redirect: 'login',
     },
-    // {
-    //   name: 'HelloWorld',
-    //   path: '/',
-    //   component: HelloWorld,
-    //   meta: {
-    //     requiresAuth: true
-    //   },
-    // },
     {
       name: 'Login',
       path: '/login',
@@ -55,6 +48,17 @@ export default new VueRouter({
           meta: {
             requiresAuth: true
           },
+        },
+      ],
+    },
+    {
+      name: 'Dashboard',
+      path: '/',
+      component: Dashboard,
+      children: [{
+          name: 'CustomerOrder',
+          path: 'customerOrder',
+          component: CustomerOrder,
         },
       ],
     },
