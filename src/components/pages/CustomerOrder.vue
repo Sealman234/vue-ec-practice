@@ -103,8 +103,10 @@
         </div>
       </div>
     </div>
-    <!-- 購物車 -->
-    <div class="row mt-4 d-flex justify-content-center">
+    <!-- Cart -->
+    <!-- 如果購物車裡沒有商品就不顯示 -->
+    <!-- 用 v-if="JSON.stringify(cart.carts)!='[]'" 也可以 -->
+    <div class="row mt-4 d-flex justify-content-center" v-if="cart.carts.length !== 0">
       <div class="col-sm-8">
         <table class="table">
           <thead>
@@ -116,13 +118,17 @@
           <tbody>
             <tr v-for="item in cart.carts" :key="item.id">
               <td class="align-middle">
-                <button type="button" class="btn btn-outline-danger btn-sm">
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  @click="removeCartItem(item.id)"
+                >
                   <i class="far fa-trash-alt"></i>
                 </button>
               </td>
               <td class="align-middle">
                 {{ item.product.title }}
-                <!-- <div class="text-success" v-if="item.coupon">已套用優惠券</div> -->
+                <div class="text-success" v-if="item.coupon">已套用優惠券</div>
               </td>
               <td class="align-middle">{{ item.qty }}/{{ item.product.unit }}</td>
               <td class="align-middle text-right">{{ item.final_total }}</td>
@@ -133,16 +139,17 @@
               <td colspan="3" class="text-right">總計</td>
               <td class="text-right">{{ cart.total }}</td>
             </tr>
-            <tr>
+            <!-- 如果沒套用折扣，就不用顯示折扣價 -->
+            <tr v-if="cart.total !== cart.final_total">
               <td colspan="3" class="text-right text-success">折扣價</td>
               <td class="text-right text-success">{{ cart.final_total }}</td>
             </tr>
           </tfoot>
         </table>
         <div class="input-group mb-3 input-group-sm">
-          <input type="text" class="form-control" placeholder="請輸入優惠碼" />
+          <input type="text" class="form-control" placeholder="請輸入優惠碼" v-model="coupon_code" />
           <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button">套用優惠碼</button>
+            <button class="btn btn-outline-secondary" type="button" @click="addCouponCode">套用優惠碼</button>
           </div>
         </div>
       </div>
@@ -162,7 +169,10 @@ export default {
         loadingItem: "" // 判斷目前畫面上是哪一個元素正在讀取中
       },
       isLoading: false,
-      cart: {}
+      cart: {
+        carts: []
+      },
+      coupon_code: ""
     };
   },
   methods: {
@@ -211,6 +221,30 @@ export default {
         vm.cart = response.data.data;
         console.log(response);
         vm.isLoading = false;
+      });
+    },
+    removeCartItem(id) {
+      const vm = this;
+      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/cart/${id}`;
+      vm.isLoading = true;
+      this.$http.delete(url).then(response => {
+        // console.log(response);
+        vm.isLoading = false;
+        this.getCart(); // 刪除後，重新取得購物車內容
+      });
+    },
+    addCouponCode() {
+      const vm = this;
+      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/coupon`;
+      vm.isLoading = true;
+      const coupon = {
+        code: vm.coupon_code // 用戶輸入的優惠碼
+      };
+      this.$http.post(url, { data: coupon }).then(response => {
+        console.log(response);
+        console.log(response.data.message); // 回應是否套用成功
+        vm.isLoading = false;
+        this.getCart(); // 套用後價格會調整，所以要重新取得購物車
       });
     }
   },
