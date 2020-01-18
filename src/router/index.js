@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 // import HelloWorld from '@/components/HelloWorld';
-import Login from '@/components/pages/login';
+import Login from '@/components/pages/Login';
 import Dashboard from '@/components/Dashboard';
 import Products from '@/components/pages/Products';
 import Coupons from '@/components/pages/Coupons';
