@@ -104,8 +104,6 @@
       </div>
     </div>
     <!-- Cart -->
-    <!-- 如果購物車裡沒有商品就不顯示 -->
-    <!-- 用 v-if="JSON.stringify(cart.carts)!='[]'" 也可以 -->
     <div class="row mt-4 d-flex justify-content-center" v-if="cart.carts.length !== 0">
       <div class="col-sm-8">
         <table class="table">
@@ -154,6 +152,89 @@
         </div>
       </div>
     </div>
+    <!-- 購物車表單 -->
+    <div class="my-5 row justify-content-center">
+      <!-- 清除表單送出後的預設行為 -->
+      <form class="col-md-6" @submit.prevent="createOrder">
+        <div class="form-group">
+          <label for="useremail">Email</label>
+          <input
+            type="email"
+            class="form-control"
+            name="email"
+            id="useremail"
+            v-model="form.user.email"
+            placeholder="請輸入 Email"
+            v-validate="'required|email'"
+            :class="{'is-invalid': errors.has('email')}"
+          />
+          <!-- errors.first('email') 會告知 email 輸入的錯誤為何 -->
+          <span class="text-danger" v-if="errors.has('email')">{{ errors.first('email') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="username">收件人姓名</label>
+          <!-- 用is-invalid (Bootstrap 4 的驗證效果) 代表驗證是錯誤的，套用條件為 errors.has('name') 時 -->
+          <input
+            type="text"
+            class="form-control"
+            name="name"
+            id="username"
+            v-model="form.user.name"
+            placeholder="輸入姓名"
+            v-validate="'required'"
+            :class="{'is-invalid': errors.has('name')}"
+          />
+          <!-- 對應上方 name 屬性的值，觸發後如果 name 不存在 (沒有輸入內容) 的話，就會跳出這個錯誤 (false -> true) -->
+          <span class="text-danger" v-if="errors.has('name')">必須輸入姓名</span>
+        </div>
+
+        <div class="form-group">
+          <label for="usertel">收件人電話</label>
+          <input
+            type="tel"
+            class="form-control"
+            id="usertel"
+            v-model="form.user.tel"
+            placeholder="請輸入電話"
+            name="userTel"
+            v-validate="'required'"
+            :class="{'is-invalid': errors.has('userTel')}"
+          />
+          <span class="text-danger" v-if="errors.has('userTel')">電話欄位不得留空</span>
+        </div>
+
+        <div class="form-group">
+          <label for="useraddress">收件人地址</label>
+          <input
+            type="text"
+            class="form-control"
+            name="address"
+            id="useraddress"
+            v-model="form.user.address"
+            placeholder="請輸入地址"
+            v-validate="'required'"
+            :class="{'is-invalid': errors.has('address')}"
+          />
+          <span class="text-danger" v-if="errors.has('address')">地址欄位不得留空</span>
+        </div>
+
+        <div class="form-group">
+          <label for="comment">留言</label>
+          <textarea
+            name
+            id="comment"
+            class="form-control"
+            cols="30"
+            rows="10"
+            v-model="form.message"
+          ></textarea>
+        </div>
+        <div class="text-right">
+          <button class="btn btn-danger">送出訂單</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -163,16 +244,26 @@ import $ from "jquery";
 export default {
   data() {
     return {
-      products: [], // 預定義資料
+      products: [],
       product: {},
       status: {
-        loadingItem: "" // 判斷目前畫面上是哪一個元素正在讀取中
+        loadingItem: ""
       },
       isLoading: false,
       cart: {
         carts: []
       },
-      coupon_code: ""
+      coupon_code: "",
+      form: {
+        // 預定義資料
+        user: {
+          name: "",
+          email: "",
+          tel: "",
+          address: ""
+        },
+        message: ""
+      }
     };
   },
   methods: {
@@ -245,6 +336,24 @@ export default {
         console.log(response.data.message); // 回應是否套用成功
         vm.isLoading = false;
         this.getCart(); // 套用後價格會調整，所以要重新取得購物車
+      });
+    },
+    createOrder() {
+      const vm = this;
+      const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/order`;
+      const order = vm.form;
+      // vm.isLoading = true;
+      // 表單完成前不能送出
+      this.$validator.validate().then(result => {
+        if (result) {
+          // do stuff if not valid.
+          this.$http.post(url, { data: order }).then(response => {
+            console.log("訂單已建立", response);
+            vm.isLoading = false;
+          });
+        } else {
+          console.log("欄位不完整");
+        }
       });
     }
   },
