@@ -349,6 +349,7 @@ export default {
           // do stuff if not valid.
           this.$http.post(url, { data: order }).then(response => {
             console.log("訂單已建立", response);
+            this.getCart();
             vm.isLoading = false;
           });
         } else {
