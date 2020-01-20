@@ -339,6 +339,7 @@ export default {
       });
     },
     createOrder() {
+      // 結帳頁面
       const vm = this;
       const url = `${process.env.APIPATH}/api/${process.env.CUSTOMPATH}/order`;
       const order = vm.form;
@@ -349,7 +350,11 @@ export default {
           // do stuff if not valid.
           this.$http.post(url, { data: order }).then(response => {
             console.log("訂單已建立", response);
-            this.getCart();
+            // 判斷式，確定訂單建立完成，即轉換頁面
+            if(response.data.success){
+              vm.$router.push(`/customerCheckout/${response.data.orderId}`); // 有變數，要使用反引號
+            }
+            // this.getCart();
             vm.isLoading = false;
           });
         } else {
