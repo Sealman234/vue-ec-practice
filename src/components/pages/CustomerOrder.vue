@@ -9,7 +9,7 @@
           <!-- 動態綁定 (:style) backgroundImage -->
           <!-- 用 ES6 反引號製作 url 連結，變數用 ${} -->
           <div
-            style="height: 150px; background-size: cover; background-position: center"
+            style="height: 150px; background-size: contain; background-repeat: no-repeat; background-position: center"
             :style="{backgroundImage: `url(${item.imageUrl})`}"
           ></div>
           <div class="card-body">
